@@ -1,0 +1,6 @@
+{
+    "name": "audiosubtitle",
+    "dependencies": [
+        "spdlog"
+    ]
+}
