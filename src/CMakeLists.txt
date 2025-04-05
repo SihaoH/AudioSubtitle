@@ -13,6 +13,8 @@ set(SOURCES
     TextTranslator.cpp
     SubtitleWidget.h
     SubtitleWidget.cpp
+    Application.h
+    Application.cpp
 )
 
 # 创建可执行文件
@@ -38,6 +40,10 @@ add_definitions(-D_SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING)
 
 # 修改从VS调试时的工作目录路径
 set_target_properties(${TARGET} PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY ${CMAKE_OUTPUT_DIRECTORY_INTDIR})
+
+# 设置输出文件名
+set_target_properties(${TARGET} PROPERTIES OUTPUT_NAME ${PROJECT_NAME})
+
 
 install(TARGETS ${TARGET} RUNTIME DESTINATION .)
 # 安装所依赖的dll（需要在vcvarsall.bat打开的环境下使用）
