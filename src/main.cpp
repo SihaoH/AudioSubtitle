@@ -1,19 +1,28 @@
 ﻿#include "AudioCapturer.h"
 #include "AudioConverter.h"
 #include "Logger.h"
-#include <QCoreApplication>
+#include "TextTranslator.h"
+#include "SubtitleWidget.h"
+#include <QApplication>
+
 
 int main(int argc, char *argv[]) {
     Logger::instance()->init("audio_subtitle.log");
-    QCoreApplication app(argc, argv);
-    
-    AudioCapturer capture;
-    capture.start(3000);
-    AudioConverter converter("vosk-model-small-cn-0.22", 11025);
-    QObject::connect(&capture, &AudioCapturer::readReady, [&](QByteArray data) {
-        QString result = converter.convert(data);
-        LOG(info) << result;
-    });
+    QApplication app(argc, argv);
+
+    SubtitleWidget widget;
+    widget.show();
+
+    float sample_rate = 16000;
+    AudioCapturer capture(sample_rate);
+    capture.start(2000);
+    AudioConverter converter("vosk-model-small-cn-0.22", sample_rate);
+    TextTranslator translator("translate-zh_en-1_9");
+    translator.setLanguage("zh", "en");
+    QObject::connect(&capture, &AudioCapturer::readReady, &converter, &AudioConverter::convert);
+    QObject::connect(&converter, &AudioConverter::completed, &widget, &SubtitleWidget::setOriginalText);
+    QObject::connect(&converter, &AudioConverter::completed, &translator, &TextTranslator::translate);
+    QObject::connect(&translator, &TextTranslator::completed, &widget, &SubtitleWidget::setTranslatedText);
 
     return app.exec();
 }
