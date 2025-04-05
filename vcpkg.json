@@ -1,6 +1,8 @@
 {
     "name": "audiosubtitle",
     "dependencies": [
-        "spdlog"
+        "spdlog",
+        "sentencepiece",
+        "openblas"
     ]
 }
