@@ -1,0 +1,4 @@
+[submodule "third_party/CTranslate2"]
+    path = third_party/CTranslate2
+    url = https://github.com/OpenNMT/CTranslate2.git
+    branch = v4.5.0 

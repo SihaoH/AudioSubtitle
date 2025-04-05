@@ -9,22 +9,32 @@ set(SOURCES
     AudioCapturer.cpp
     AudioConverter.h
     AudioConverter.cpp
+    TextTranslator.h
+    TextTranslator.cpp
+    SubtitleWidget.h
+    SubtitleWidget.cpp
 )
 
 # 创建可执行文件
 add_executable(${TARGET} ${SOURCES})
 
 # 设置库的依赖
-find_package(Qt6 REQUIRED COMPONENTS Core)
+find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets)
 find_package(spdlog CONFIG REQUIRED)
 
 target_link_libraries(${TARGET}
     PUBLIC
     Qt6::Core
+    Qt6::Gui
+    Qt6::Widgets
     PRIVATE
     spdlog::spdlog_header_only
     libvosk
+    libsentencepiece
+    ctranslate2
 )
+
+add_definitions(-D_SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING)
 
 # 修改从VS调试时的工作目录路径
 set_target_properties(${TARGET} PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY ${CMAKE_OUTPUT_DIRECTORY_INTDIR})
