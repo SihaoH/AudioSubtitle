@@ -36,7 +36,7 @@ public:
     QByteArray savedData;
 };
 
-AudioCapturer::AudioCapturer(float sample_rate, QObject *parent)
+AudioCapturer::AudioCapturer(QObject *parent)
     : QObject(parent)
     , d(new AudioCapturerPrivate)
 {
@@ -64,7 +64,7 @@ AudioCapturer::AudioCapturer(float sample_rate, QObject *parent)
     // 设置音频格式
     d->wfx.wFormatTag = WAVE_FORMAT_PCM;
     d->wfx.nChannels = 1;
-    d->wfx.nSamplesPerSec = sample_rate;
+    d->wfx.nSamplesPerSec = sampleRate;
     d->wfx.wBitsPerSample = 16;
     d->wfx.nBlockAlign = d->wfx.nChannels * d->wfx.wBitsPerSample / 8;
     d->wfx.nAvgBytesPerSec = d->wfx.nSamplesPerSec * d->wfx.nBlockAlign;

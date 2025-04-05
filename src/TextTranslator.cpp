@@ -1,38 +1,110 @@
 #include "TextTranslator.h"
 #include "logger.h"
 #include <QThread>
+#include <QDir>
 #include <sentencepiece_processor.h>
 #include <ctranslate2/translator.h>
 
 class TextTranslatorPrivate
 {
 public:
-    TextTranslatorPrivate(const QString& model_path)
-    {
-        tokenizer = new sentencepiece::SentencePieceProcessor();
-        const auto status = tokenizer->Load((model_path+"/spiece.model").toUtf8().constData());
-        if (!status.ok()) {
-            LOG(err) << "加载翻译模型失败: " << status.ToString();
-        }
-        ctranslate2::ReplicaPoolConfig ct2_cfg = {};
-        ct2_cfg.num_threads_per_replica = 4;
-        translator = new ctranslate2::Translator((model_path + "/model").toStdString(), ctranslate2::Device::CPU, ctranslate2::ComputeType::DEFAULT, {0}, false, ct2_cfg);
-    }
+    TextTranslatorPrivate() = default;
     ~TextTranslatorPrivate()
     {
-        delete tokenizer;
-        delete translator;
+        clear();
+    }
+    void setLanguage(const QString& src, const QString& dst)
+    {
+        const QString prefix = "models/";
+        const QString sp_suffix = "/sentencepiece.model";
+        const QString tr_suffix = "/model";
+        clear();
+    
+        // 如果源语言和目标语言都不是英语,需要加载中间模型
+        if (src != "en" && dst != "en") {
+            
+            // 先加载src->en的模型
+            QString src_en_dir = QString("%1translate-%2_en").arg(prefix).arg(src);
+            if (!QDir(src_en_dir).exists()) {
+                LOG(err) << "翻译模型不存在: " << src_en_dir;
+                return;
+            }
+            
+            // 加载en->dst的模型
+            QString en_dst_dir = QString("%1translate-en_%2").arg(prefix).arg(dst);
+            if (!QDir(en_dst_dir).exists()) {
+                LOG(err) << "翻译模型不存在: " << en_dst_dir;
+                return;
+            }
+            
+            clear();
+            // 加载第一个模型(src->en)
+            tokenizer = new sentencepiece::SentencePieceProcessor();
+            auto status = tokenizer->Load((src_en_dir + sp_suffix).toUtf8().constData());
+            if (!status.ok()) {
+                LOG(err) << "加载翻译模型失败: " << status.ToString();
+                return;
+            }
+
+            translator = new ctranslate2::Translator((src_en_dir + tr_suffix).toStdString(), ctranslate2::Device::CPU);
+                
+            // 加载第二个模型(en->dst)
+            tokenizer2 = new sentencepiece::SentencePieceProcessor();
+            status = tokenizer2->Load((en_dst_dir+sp_suffix).toUtf8().constData());
+            if (!status.ok()) {
+                LOG(err) << "加载翻译模型失败: " << status.ToString();
+                return;
+            }
+
+            translator2 = new ctranslate2::Translator((en_dst_dir + tr_suffix).toStdString(), ctranslate2::Device::CPU);
+        } else {
+            // 直接加载src->dst的模型
+            QString model_dir = QString("%1translate-%1_%2").arg(prefix).arg(src).arg(dst);
+            if (!QDir(model_dir).exists()) {
+                LOG(err) << "翻译模型不存在: " << model_dir;
+                return;
+            }
+            tokenizer = new sentencepiece::SentencePieceProcessor();
+            auto status = tokenizer->Load((model_dir+sp_suffix).toUtf8().constData());
+            if (!status.ok()) {
+                LOG(err) << "加载翻译模型失败: " << status.ToString();
+                return;
+            }
+
+            translator = new ctranslate2::Translator((model_dir + tr_suffix).toStdString(), ctranslate2::Device::CPU);
+        }
+    }
+    void clear()
+    {
+        if (tokenizer) {
+            delete tokenizer;
+            tokenizer = nullptr;
+        }
+        if (tokenizer2) {
+            delete tokenizer2;
+            tokenizer2 = nullptr;
+        }
+        if (translator) {
+            delete translator;
+            translator = nullptr;
+        }
+        if (translator2) {
+            delete translator2;
+            translator2 = nullptr;
+        }
     }
 
 public:
     sentencepiece::SentencePieceProcessor* tokenizer = nullptr;
+    sentencepiece::SentencePieceProcessor* tokenizer2 = nullptr;
     ctranslate2::Translator* translator = nullptr;
+    ctranslate2::Translator* translator2 = nullptr;
 };
 
-TextTranslator::TextTranslator(const QString& model_path, QObject* parent)
+TextTranslator::TextTranslator(QObject* parent)
     : QObject(parent)
     , thread(new QThread(this))
-    , d(new TextTranslatorPrivate(model_path))
+    , d(new TextTranslatorPrivate())
 {
     thread->setObjectName("TextTranslatorThread");
     moveToThread(thread);
@@ -42,15 +114,19 @@ TextTranslator::TextTranslator(const QString& model_path, QObject* parent)
 
 TextTranslator::~TextTranslator()
 {
-    delete d;
     thread->quit();
     thread->wait();
+    delete d;
 }
 
 void TextTranslator::setLanguage(const QString& src, const QString& dst)
 {
-    srcLang = src;
-    dstLang = dst;
+    d->setLanguage(src, dst);
+}
+
+void TextTranslator::start()
+{
+    thread->start();
 }
 
 void TextTranslator::translate(const QString& text)
@@ -59,16 +135,20 @@ void TextTranslator::translate(const QString& text)
         emit completed(QString());
         return;
     }
-    //auto prefix_text = QString("%1%2%3: %4").arg(srcLang).arg("2").arg(dstLang).arg(text);
-    auto prefix_text = text;
     std::vector<std::vector<std::string>> batch = {{""}};
-    d->tokenizer->Encode(prefix_text.toUtf8().constData(), &batch[0]);
+    d->tokenizer->Encode(text.toUtf8().constData(), &batch[0]);
     ctranslate2::TranslationOptions options;
     options.beam_size = 1;
-    options.use_vmap = true;
     auto ret_batch = d->translator->translate_batch(batch, options);
+    if (d->translator2) {
+        ret_batch = d->translator2->translate_batch(ret_batch[0].hypotheses, options);
+    }
     std::string std_str;
-    d->tokenizer->Decode(ret_batch[0].output(), &std_str);
+    if (d->translator2) {
+        d->tokenizer2->Decode(ret_batch[0].output(), &std_str);
+    } else {
+        d->tokenizer->Decode(ret_batch[0].output(), &std_str);
+    }
     auto ret_str = QString::fromStdString(std_str);
     ret_str.replace("▁", " ");
     ret_str = ret_str.trimmed();

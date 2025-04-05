@@ -6,7 +6,7 @@
 #include <QGraphicsOpacityEffect>
 
 SubtitleWidget::SubtitleWidget(QWidget *parent)
-    : QWidget(parent)
+    : QWidget(nullptr)
     , isDragging(false)
 {
     setWindowFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint);

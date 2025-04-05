@@ -5,8 +5,11 @@ class AudioConverter : public QObject
 {
     Q_OBJECT
 public:
-    AudioConverter(const QString& model_path, float sample_rate, QObject* parent = nullptr);
+    AudioConverter(QObject* parent = nullptr);
     ~AudioConverter();
+
+    void setLanguage(const QString& lang);
+    void start();
 
 public slots:
     void convert(const QByteArray& data);
@@ -18,6 +21,5 @@ private:
     class QThread* thread = nullptr;
     class VoskModel* model = nullptr;
     class VoskRecognizer* recognizer = nullptr;
-    struct whisper_context* wctx = nullptr;
     float sampleRate = 16000.f;
 };

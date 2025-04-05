@@ -5,10 +5,11 @@ class TextTranslator : public QObject
 {
     Q_OBJECT
 public:
-    TextTranslator(const QString& model_path, QObject* parent = nullptr);
+    TextTranslator(QObject* parent = nullptr);
     ~TextTranslator();
 
     void setLanguage(const QString& src, const QString& dst);
+    void start();
 
 public slots:
     void translate(const QString& text);

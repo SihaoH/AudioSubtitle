@@ -5,7 +5,7 @@ class AudioCapturer : public QObject
 {
     Q_OBJECT
 public:
-    AudioCapturer(float sample_rate, QObject *parent = nullptr);
+    AudioCapturer(QObject *parent = nullptr);
     ~AudioCapturer();
 
     void start(int msec);
@@ -19,5 +19,6 @@ signals:
 
 private:
     class AudioCapturerPrivate* d;
+    float sampleRate = 16000.f;
 };
 
