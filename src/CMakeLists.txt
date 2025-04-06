@@ -21,7 +21,7 @@ set(SOURCES
 add_executable(${TARGET} ${SOURCES})
 
 # 设置库的依赖
-find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets)
+find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets EntryPointPrivate)
 find_package(spdlog CONFIG REQUIRED)
 
 target_link_libraries(${TARGET}
@@ -29,6 +29,7 @@ target_link_libraries(${TARGET}
     Qt6::Core
     Qt6::Gui
     Qt6::Widgets
+    Qt6::EntryPointPrivate
     PRIVATE
     spdlog::spdlog_header_only
     libvosk
@@ -43,6 +44,8 @@ set_target_properties(${TARGET} PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY ${CMAKE
 
 # 设置输出文件名
 set_target_properties(${TARGET} PROPERTIES OUTPUT_NAME ${PROJECT_NAME})
+
+set_target_properties(${TARGET} PROPERTIES LINK_FLAGS_RELEASE "/SUBSYSTEM:WINDOWS")
 
 # 为config.json创建符号链接
 add_custom_command(

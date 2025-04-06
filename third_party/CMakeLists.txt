@@ -37,10 +37,9 @@ install(FILES
 # 添加sentencepiece库，由vcpkg安装
 find_package(absl CONFIG REQUIRED)
 find_package(protobuf CONFIG REQUIRED)
-find_library(SENTENCEPIECE_LIB sentencepiece)
-if(NOT SENTENCEPIECE_LIB OR NOT SENTENCEPIECE_TRAIN_LIB)
-    message(FATAL_ERROR "未找到 sentencepiece 库文件")
-endif()
+set(SENTENCEPIECE_LIB_DEB ${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/debug/lib/sentencepiece.lib)
+set(SENTENCEPIECE_LIB_REL ${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/lib/sentencepiece.lib)
+set(SENTENCEPIECE_LIB debug ${SENTENCEPIECE_LIB_DEB} optimized ${SENTENCEPIECE_LIB_REL})
 add_library(libsentencepiece INTERFACE)
 target_include_directories(libsentencepiece INTERFACE ${SENTENCEPIECE_ROOT})
 target_link_libraries(libsentencepiece INTERFACE
