@@ -9,7 +9,6 @@ public:
     ~AudioConverter();
 
     void setLanguage(const QString& lang);
-    void start();
 
 public slots:
     void convert(const QByteArray& data);

@@ -36,13 +36,14 @@ public:
                 LOG(err) << "翻译模型不存在: " << en_dst_dir;
                 return;
             }
-            
-            clear();
+
             // 加载第一个模型(src->en)
             tokenizer = new sentencepiece::SentencePieceProcessor();
             auto status = tokenizer->Load((src_en_dir + sp_suffix).toUtf8().constData());
-            if (!status.ok()) {
-                LOG(err) << "加载翻译模型失败: " << status.ToString();
+            if (status.ok()) {
+                LOG(info) << "加载翻译模型成功: " << src_en_dir;
+            } else {
+                LOG(err) << "加载翻译模型失败: " << src_en_dir << " " << status.ToString();
                 return;
             }
 
@@ -51,23 +52,27 @@ public:
             // 加载第二个模型(en->dst)
             tokenizer2 = new sentencepiece::SentencePieceProcessor();
             status = tokenizer2->Load((en_dst_dir+sp_suffix).toUtf8().constData());
-            if (!status.ok()) {
-                LOG(err) << "加载翻译模型失败: " << status.ToString();
+            if (status.ok()) {
+                LOG(info) << "加载翻译模型成功: " << en_dst_dir;
+            } else {
+                LOG(err) << "加载翻译模型失败: " << en_dst_dir << " " << status.ToString();
                 return;
             }
 
             translator2 = new ctranslate2::Translator((en_dst_dir + tr_suffix).toStdString(), ctranslate2::Device::CPU);
         } else {
             // 直接加载src->dst的模型
-            QString model_dir = QString("%1translate-%1_%2").arg(prefix).arg(src).arg(dst);
+            QString model_dir = QString("%1translate-%2_%3").arg(prefix).arg(src).arg(dst);
             if (!QDir(model_dir).exists()) {
                 LOG(err) << "翻译模型不存在: " << model_dir;
                 return;
             }
             tokenizer = new sentencepiece::SentencePieceProcessor();
             auto status = tokenizer->Load((model_dir+sp_suffix).toUtf8().constData());
-            if (!status.ok()) {
-                LOG(err) << "加载翻译模型失败: " << status.ToString();
+            if (status.ok()) {
+                LOG(info) << "加载翻译模型成功: " << model_dir;
+            } else {
+                LOG(err) << "加载翻译模型失败: " << model_dir << " " << status.ToString();
                 return;
             }
 
@@ -121,11 +126,10 @@ TextTranslator::~TextTranslator()
 
 void TextTranslator::setLanguage(const QString& src, const QString& dst)
 {
+    LOG(info) << "设置翻译语言: " << src << " -> " << dst;
+    thread->quit();
+    thread->wait();
     d->setLanguage(src, dst);
-}
-
-void TextTranslator::start()
-{
     thread->start();
 }
 
@@ -139,6 +143,8 @@ void TextTranslator::translate(const QString& text)
     d->tokenizer->Encode(text.toUtf8().constData(), &batch[0]);
     ctranslate2::TranslationOptions options;
     options.beam_size = 1;
+    options.length_penalty = 0.2f;
+    options.replace_unknowns = true;
     auto ret_batch = d->translator->translate_batch(batch, options);
     if (d->translator2) {
         ret_batch = d->translator2->translate_batch(ret_batch[0].hypotheses, options);

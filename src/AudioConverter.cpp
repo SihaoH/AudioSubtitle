@@ -18,31 +18,30 @@ AudioConverter::AudioConverter(QObject* parent)
 
 void AudioConverter::setLanguage(const QString& lang)
 {
+    thread->quit();
+    thread->wait();
+    LOG(info) << "设置语音识别的语言: " << lang;
     const auto model_path = QString("models/vosk-%1").arg(lang);
     if (QDir(model_path).exists()) {
         if (model) {
             vosk_model_free(model);
         }
         model = vosk_model_new(model_path.toUtf8().constData());
+        LOG(info) << "语音模型加载成功: " << model_path;
+        thread->start();
     } else {
         LOG(err) << "语音模型不存在: " << model_path;
     }
 }
 
-void AudioConverter::start()
-{
-    if (model != nullptr) {
-        thread->start();
-    }
-}
-
 AudioConverter::~AudioConverter()
 {
+    thread->quit();
+    thread->wait();
     if (recognizer) {
         vosk_recognizer_free(recognizer);
     }
     vosk_model_free(model);
-    thread->quit();
 }
 
 void AudioConverter::convert(const QByteArray &data)

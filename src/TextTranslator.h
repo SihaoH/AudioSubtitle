@@ -9,7 +9,6 @@ public:
     ~TextTranslator();
 
     void setLanguage(const QString& src, const QString& dst);
-    void start();
 
 public slots:
     void translate(const QString& text);

@@ -116,12 +116,14 @@ void AudioCapturer::start(int msec)
 
     d->needDuration = msec;
     d->captureTimer->start(d->timerInterval);
+    LOG(info) << "开始捕获音频，识别间隔：" << QString::number(msec) << "ms";
 }
 
 void AudioCapturer::stop()
 {
     d->captureTimer->stop();
     d->pAudioClient->Stop();
+    LOG(info) << "停止捕获音频";
 }
 
 void AudioCapturer::onCaptured()

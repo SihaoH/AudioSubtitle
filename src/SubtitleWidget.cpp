@@ -4,6 +4,8 @@
 #include <QPushButton>
 #include <QMouseEvent>
 #include <QGraphicsOpacityEffect>
+#include <QHBoxLayout>
+#include <QComboBox>
 
 SubtitleWidget::SubtitleWidget(QWidget *parent)
     : QWidget(nullptr)
@@ -23,11 +25,75 @@ SubtitleWidget::SubtitleWidget(QWidget *parent)
 void SubtitleWidget::initUI()
 {
     // 创建主布局
-    QVBoxLayout *mainLayout = new QVBoxLayout(this);
-    mainLayout->setSizeConstraint(QLayout::SetFixedSize);
-    mainLayout->setContentsMargins(0, 0, 0, 0);
-    mainLayout->setSpacing(0);
+    auto main_layout = new QVBoxLayout(this);
+    main_layout->setSizeConstraint(QLayout::SetFixedSize);
+    main_layout->setContentsMargins(0, 0, 0, 0);
+    main_layout->setSpacing(0);
     
+    // 创建水平布局用于放置下拉框
+    auto first_layout = new QHBoxLayout();
+    first_layout->setSpacing(10);
+    main_layout->setContentsMargins(10, 0, 0, 0);
+    
+    // 创建并设置原文语言选择
+    originalLangLabel = new QLabel("原文:", this);
+    originalLangLabel->setStyleSheet("color: white;");
+    originalLangCombo = new QComboBox(this);
+    originalLangCombo->setFixedWidth(60);
+    originalLangCombo->setCursor(Qt::PointingHandCursor);
+    for (auto i = langMap.cbegin(), end = langMap.cend(); i != end; ++i) {
+        originalLangCombo->addItem(i.value(), i.key());
+    }
+    connect(originalLangCombo, &QComboBox::currentIndexChanged, [this](int index) {
+        emit originalLangChanged(originalLangCombo->itemData(index).toString());
+    });
+    
+    // 创建并设置译文语言选择
+    translatedLangLabel = new QLabel("译文:", this);
+    translatedLangLabel->setStyleSheet("color: white;");
+    translatedLangCombo = new QComboBox(this);
+    translatedLangCombo->setFixedWidth(60);
+    translatedLangCombo->setCursor(Qt::PointingHandCursor);
+    for (auto i = langMap.cbegin(), end = langMap.cend(); i != end; ++i) {
+        translatedLangCombo->addItem(i.value(), i.key());
+    }
+    connect(translatedLangCombo, &QComboBox::currentIndexChanged, [this](int index) {
+        emit translatedLangChanged(translatedLangCombo->itemData(index).toString());
+    });
+
+    // 创建并设置识别间隔选择
+    durationLabel = new QLabel("识别间隔:", this);
+    durationLabel->setStyleSheet("color: white;");
+    durationCombo = new QComboBox(this);
+    durationCombo->setFixedWidth(60);
+    durationCombo->setCursor(Qt::PointingHandCursor);
+    durationCombo->addItem("1.0");
+    durationCombo->addItem("1.5");
+    durationCombo->addItem("2.0");
+    durationCombo->addItem("2.5");
+    durationCombo->addItem("3.0");
+    connect(durationCombo, &QComboBox::currentTextChanged, this, &SubtitleWidget::durationChanged);
+
+    // 设置下拉框样式
+    QString comboStyle = 
+        "QComboBox {"
+        "    background-color: #333333;"
+        "    color: white;"
+        "    border: 1px solid #666666;"
+        "    padding: 2px;"
+        "}"
+        "QComboBox::drop-down {"
+        "    border: none;"
+        "}"
+        "QComboBox QAbstractItemView {"
+        "    background-color: #333333;"
+        "    color: white;"
+        "    selection-background-color: #666666;"
+        "}";
+    originalLangCombo->setStyleSheet(comboStyle);
+    translatedLangCombo->setStyleSheet(comboStyle);
+    durationCombo->setStyleSheet(comboStyle);
+
     // 创建关闭按钮
     closeButton = new QPushButton("×", this);
     closeButton->setCursor(Qt::PointingHandCursor);
@@ -47,6 +113,21 @@ void SubtitleWidget::initUI()
     closeButton->setFont(font);
     connect(closeButton, &QPushButton::clicked, this, &QWidget::close);
     
+    // 添加到水平布局
+    first_layout->addWidget(originalLangLabel);
+    first_layout->addWidget(originalLangCombo);
+    first_layout->addSpacing(10);
+    first_layout->addWidget(translatedLangLabel);
+    first_layout->addWidget(translatedLangCombo);
+    first_layout->addSpacing(10);
+    first_layout->addWidget(durationLabel);
+    first_layout->addWidget(durationCombo);
+    first_layout->addStretch();
+    first_layout->addWidget(closeButton);
+    
+    // 将水平布局添加到主布局
+    main_layout->addLayout(first_layout);
+
     // 创建文本标签
     originalLabel = new QLabel(this);
     translatedLabel = new QLabel(this);
@@ -71,16 +152,26 @@ void SubtitleWidget::initUI()
     translatedLabel->setAlignment(Qt::AlignCenter);
     
     // 添加部件到布局
-    mainLayout->addWidget(closeButton, 0, Qt::AlignRight);
-    mainLayout->addWidget(originalLabel);
-    mainLayout->addWidget(translatedLabel);
+    main_layout->addWidget(originalLabel);
+    main_layout->addWidget(translatedLabel);
     
     // 添加一个1px高度的占位widget以保持最小尺寸
     QWidget* spacer = new QWidget(this);
     spacer->setFixedSize(600, 1);
-    mainLayout->addWidget(spacer);
+    main_layout->addWidget(spacer);
     
-    setLayout(mainLayout);
+    setLayout(main_layout);
+}
+
+void SubtitleWidget::setLanguage(const QString& src_lang, const QString& target_lang)
+{
+    originalLangCombo->setCurrentText(langMap[src_lang]);
+    translatedLangCombo->setCurrentText(langMap[target_lang]);
+}
+
+void SubtitleWidget::setDuration(const QString& text)
+{
+    durationCombo->setCurrentText(text);
 }
 
 void SubtitleWidget::mousePressEvent(QMouseEvent *event)
@@ -104,6 +195,7 @@ void SubtitleWidget::mouseReleaseEvent(QMouseEvent *event)
 {
     isDragging = false;
     event->accept();
+    emit positionChanged(pos());
 }
 
 void SubtitleWidget::setOriginalText(const QString &text)
@@ -119,16 +211,12 @@ void SubtitleWidget::setTranslatedText(const QString &text)
 void SubtitleWidget::resizeEvent(QResizeEvent *event)
 {
     QWidget::resizeEvent(event);
-    
-    // 获取大小变化前后的差值
+    // 移动窗口，使中心点保持不变
     QSize oldSize = event->oldSize();
     QSize newSize = event->size();
-    
-    // 只有在有效的旧尺寸时才需要调整
     if (oldSize.isValid()) {
-        // 计算宽度变化值的一半
         int xOffset = (newSize.width() - oldSize.width()) / 2;
-        // 移动窗口，使中心点保持不变
         move(x() - xOffset, y());
     }
-} 
+    emit positionChanged(pos());
+}
