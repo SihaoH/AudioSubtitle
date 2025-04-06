@@ -8,8 +8,8 @@
 #include <QJsonArray>
 #include <QRegularExpression>
 
-AudioConverter::AudioConverter(QObject* parent)
-    : QObject(parent)
+AudioConverter::AudioConverter()
+    : QObject(nullptr)
     , thread(new QThread(this))
 {
     thread->setObjectName("AudioConverterThread");

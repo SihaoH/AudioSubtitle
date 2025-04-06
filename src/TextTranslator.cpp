@@ -106,8 +106,8 @@ public:
     ctranslate2::Translator* translator2 = nullptr;
 };
 
-TextTranslator::TextTranslator(QObject* parent)
-    : QObject(parent)
+TextTranslator::TextTranslator()
+    : QObject(nullptr)
     , thread(new QThread(this))
     , d(new TextTranslatorPrivate())
 {

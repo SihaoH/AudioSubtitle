@@ -5,7 +5,7 @@ class TextTranslator : public QObject
 {
     Q_OBJECT
 public:
-    TextTranslator(QObject* parent = nullptr);
+    TextTranslator();
     ~TextTranslator();
 
     void setLanguage(const QString& src, const QString& dst);

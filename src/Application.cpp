@@ -19,6 +19,8 @@ Application::Application(int argc, char **argv)
 Application::~Application()
 {
     delete mainWindow;
+    delete audioConverter;
+    delete textTranslator;
 }
 
 void Application::loadConfig()
@@ -88,16 +90,17 @@ void Application::init()
     connect(mainWindow, &SubtitleWidget::durationChanged, this, &Application::onDurationChanged);
 
     audioCapturer = new AudioCapturer(this);
-    audioConverter = new AudioConverter(this);
-    textTranslator = new TextTranslator(this);
+    audioConverter = new AudioConverter();
+    textTranslator = new TextTranslator();
 
+    // 使用标志值，让转换和翻译只响应最新的（中间来不及处理的会丢失）
     connect(audioCapturer, &AudioCapturer::readReady, this, &Application::onAudioReady);
-    connect(this, &Application::aboutToConvert, audioConverter, &AudioConverter::convert);
-    connect(audioConverter, &AudioConverter::completed, mainWindow, &SubtitleWidget::setOriginalText);
-    connect(audioConverter, &AudioConverter::completed, this, &Application::onConvertCompleted);
-    connect(this, &Application::aboutToTranslate, textTranslator, &TextTranslator::translate);
-    connect(textTranslator, &TextTranslator::completed, mainWindow, &SubtitleWidget::setTranslatedText);
-    connect(textTranslator, &TextTranslator::completed, this, &Application::onTranslateCompleted);
+    connect(this, &Application::aboutToConvert, audioConverter, &AudioConverter::convert, Qt::QueuedConnection);
+    connect(audioConverter, &AudioConverter::completed, mainWindow, &SubtitleWidget::setOriginalText, Qt::QueuedConnection);
+    connect(audioConverter, &AudioConverter::completed, this, &Application::onConvertCompleted, Qt::QueuedConnection);
+    connect(this, &Application::aboutToTranslate, textTranslator, &TextTranslator::translate, Qt::QueuedConnection);
+    connect(textTranslator, &TextTranslator::completed, mainWindow, &SubtitleWidget::setTranslatedText, Qt::QueuedConnection);
+    connect(textTranslator, &TextTranslator::completed, this, &Application::onTranslateCompleted, Qt::QueuedConnection);
 
     audioConverter->setLanguage(originalLang);
     textTranslator->setLanguage(originalLang, translationLang);

@@ -5,7 +5,7 @@ class AudioConverter : public QObject
 {
     Q_OBJECT
 public:
-    AudioConverter(QObject* parent = nullptr);
+    AudioConverter();
     ~AudioConverter();
 
     void setLanguage(const QString& lang);
