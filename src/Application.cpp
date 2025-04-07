@@ -8,6 +8,7 @@
 #include <QJsonObject>
 #include <QJsonArray>
 #include <QFile>
+#include <QTimer>
 
 Application::Application(int argc, char **argv)
     : QApplication(argc, argv)
@@ -21,6 +22,11 @@ Application::~Application()
     delete mainWindow;
     delete audioConverter;
     delete textTranslator;
+}
+
+void Application::initLater()
+{
+    QTimer::singleShot(0, this, &Application::init);
 }
 
 void Application::loadConfig()

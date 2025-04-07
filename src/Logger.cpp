@@ -2,6 +2,10 @@
 #include <spdlog/spdlog.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/sinks/basic_file_sink.h>
+#ifdef ALERT_ERROR_LOG
+#include <QMessageBox>
+#include <QCoreApplication>
+#endif
 
 LogStream::LogStream(int t, const char* file, int line)
 {
@@ -30,6 +34,12 @@ LogStream& LogStream::operator<<(const std::string& str)
 LogStream::~LogStream()
 {
     spdlog::log((spdlog::level::level_enum)type, qPrintable(wholeStr));
+#ifdef ALERT_ERROR_LOG
+    if (type == spdlog::level::err) {
+        QMessageBox::warning(nullptr, "错误", wholeStr);
+        QCoreApplication::exit();
+    }
+#endif
 }
 
 Logger::Logger()

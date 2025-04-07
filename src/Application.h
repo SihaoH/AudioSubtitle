@@ -11,7 +11,7 @@ public:
     Application(int argc, char **argv);
     ~Application();
 
-    void init();
+    void initLater();
 
 signals:
     void aboutToConvert(const QByteArray& data);
@@ -25,6 +25,9 @@ public slots:
     void onOriginalLangChanged(const QString& text);
     void onTranslatedLangChanged(const QString& text);
     void onDurationChanged(const QString& text);
+
+private slots:
+    void init();
     
 private:
     void loadConfig();
