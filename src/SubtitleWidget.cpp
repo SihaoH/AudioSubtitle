@@ -35,33 +35,27 @@ void SubtitleWidget::initUI()
     first_layout->setSpacing(10);
     main_layout->setContentsMargins(10, 0, 0, 0);
     
-    // 创建并设置原文语言选择
+    // 原文语言选择
     originalLangLabel = new QLabel("原文:", this);
     originalLangLabel->setStyleSheet("color: white;");
     originalLangCombo = new QComboBox(this);
     originalLangCombo->setFixedWidth(60);
     originalLangCombo->setCursor(Qt::PointingHandCursor);
-    for (auto i = langMap.cbegin(), end = langMap.cend(); i != end; ++i) {
-        originalLangCombo->addItem(i.value(), i.key());
-    }
     connect(originalLangCombo, &QComboBox::currentIndexChanged, [this](int index) {
         emit originalLangChanged(originalLangCombo->itemData(index).toString());
     });
     
-    // 创建并设置译文语言选择
+    // 译文语言选择
     translatedLangLabel = new QLabel("译文:", this);
     translatedLangLabel->setStyleSheet("color: white;");
     translatedLangCombo = new QComboBox(this);
     translatedLangCombo->setFixedWidth(60);
     translatedLangCombo->setCursor(Qt::PointingHandCursor);
-    for (auto i = langMap.cbegin(), end = langMap.cend(); i != end; ++i) {
-        translatedLangCombo->addItem(i.value(), i.key());
-    }
     connect(translatedLangCombo, &QComboBox::currentIndexChanged, [this](int index) {
         emit translatedLangChanged(translatedLangCombo->itemData(index).toString());
     });
 
-    // 创建并设置识别间隔选择
+    // 识别间隔选择
     durationLabel = new QLabel("识别间隔:", this);
     durationLabel->setStyleSheet("color: white;");
     durationCombo = new QComboBox(this);
@@ -163,10 +157,30 @@ void SubtitleWidget::initUI()
     setLayout(main_layout);
 }
 
+void SubtitleWidget::setLangMap(const QMap<QString, QString> map)
+{
+    originalLangCombo->clear();
+    translatedLangCombo->clear();
+    for (auto i = map.cbegin(), end = map.cend(); i != end; ++i) {
+        originalLangCombo->addItem(i.value(), i.key());
+        translatedLangCombo->addItem(i.value(), i.key());
+    }
+}
+
 void SubtitleWidget::setLanguage(const QString& src_lang, const QString& target_lang)
 {
-    originalLangCombo->setCurrentText(langMap[src_lang]);
-    translatedLangCombo->setCurrentText(langMap[target_lang]);
+    for(int i = 0; i < originalLangCombo->count(); ++i) {
+        if(originalLangCombo->itemData(i).toString() == src_lang) {
+            originalLangCombo->setCurrentIndex(i);
+            break;
+        }
+    }
+    for(int i = 0; i < translatedLangCombo->count(); ++i) {
+        if(translatedLangCombo->itemData(i).toString() == target_lang) {
+            translatedLangCombo->setCurrentIndex(i);
+            break;
+        }
+    }
 }
 
 void SubtitleWidget::setDuration(const QString& text)
@@ -195,7 +209,7 @@ void SubtitleWidget::mouseReleaseEvent(QMouseEvent *event)
 {
     isDragging = false;
     event->accept();
-    emit positionChanged(pos());
+    emit positionChanged(QPoint(x()+width()*0.5f, y()));
 }
 
 void SubtitleWidget::setOriginalText(const QString &text)
@@ -215,8 +229,7 @@ void SubtitleWidget::resizeEvent(QResizeEvent *event)
     QSize oldSize = event->oldSize();
     QSize newSize = event->size();
     if (oldSize.isValid()) {
-        int xOffset = (newSize.width() - oldSize.width()) / 2;
-        move(x() - xOffset, y());
+        int offset_x = (newSize.width() - oldSize.width()) * 0.5f;
+        move(x() - offset_x, y());
     }
-    emit positionChanged(pos());
 }

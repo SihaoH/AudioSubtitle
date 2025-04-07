@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QApplication>
+#include <QMap>
 
 class Application : public QApplication
 {
@@ -35,6 +36,7 @@ private:
     QString duration = "2.0";
     QString originalLang = "ja";    // 默认值
     QString translationLang = "zh"; // 默认值
+    QMap<QString, QString> langMap;
     
     class SubtitleWidget* mainWindow = nullptr;
     class AudioCapturer* audioCapturer = nullptr;

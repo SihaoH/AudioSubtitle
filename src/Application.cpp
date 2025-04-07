@@ -25,44 +25,56 @@ Application::~Application()
 
 void Application::loadConfig()
 {
-    QFile configFile("config.json");
-    if (!configFile.open(QIODevice::ReadOnly)) {
-        LOG(err) << "无法打开配置文件：" << configFile.errorString();
+    QFile config_file("config.json");
+    if (!config_file.open(QIODevice::ReadOnly)) {
+        LOG(err) << "无法打开配置文件：" << config_file.errorString();
         return;
     }
 
-    QByteArray configData = configFile.readAll();
-    QJsonDocument doc = QJsonDocument::fromJson(configData);
-    
+    auto doc = QJsonDocument::fromJson(config_file.readAll());
     if (doc.isNull()) {
         LOG(err) << "配置文件格式错误";
         return;
     }
 
-    QJsonObject config = doc.object();
-    
+    auto config = doc.object();
     // 读取窗口大小
     if (config.contains("window")) {
         auto size = config["window"].toArray();
         windowX = size[0].toInt();
         windowY = size[1].toInt();
     }
-    
     // 读取持续时间
     if (config.contains("duration")) {
         duration = config["duration"].toString(); // 转换为毫秒
     }
-    
     // 读取语言设置
     originalLang = config["original"].toString();
     translationLang = config["translation"].toString();
+
+    // 读取模型配置文件
+    QFile manifest_file("./models/manifest");
+    if (!manifest_file.open(QIODevice::ReadOnly)) {
+        LOG(err) << "无法打开模型配置文件：" << manifest_file.errorString();
+        return;
+    }
+
+    auto manifest_doc = QJsonDocument::fromJson(manifest_file.readAll());
+    if (manifest_doc.isNull()) {
+        LOG(err) << "模型配置文件格式错误";
+        return;
+    }
+    auto manifest = manifest_doc.object();
+    for (auto it = manifest.begin(); it != manifest.end(); ++it) {
+        langMap.insert(it.key(), it.value().toString());
+    }
 }
 
 void Application::saveConfig()
 {
-    QFile configFile("config.json");
-    if (!configFile.open(QIODevice::WriteOnly)) {
-        LOG(err) << "无法打开配置文件：" << configFile.errorString();
+    QFile config_file("config.json");
+    if (!config_file.open(QIODevice::WriteOnly)) {
+        LOG(err) << "无法打开配置文件：" << config_file.errorString();
         return;
     }
 
@@ -73,15 +85,17 @@ void Application::saveConfig()
     config["translation"] = translationLang;
 
     QJsonDocument doc(config);
-    configFile.write(doc.toJson());
+    config_file.write(doc.toJson());
 }
 
 void Application::init()
 {
     mainWindow = new SubtitleWidget();
+    mainWindow->show();
     if (windowX > 0 && windowY > 0) {
-        mainWindow->move(windowX, windowY);
+        mainWindow->move(windowX - mainWindow->width()*0.5f, windowY);
     }
+    mainWindow->setLangMap(langMap);
     mainWindow->setLanguage(originalLang, translationLang);
     mainWindow->setDuration(duration);
     connect(mainWindow, &SubtitleWidget::positionChanged, this, &Application::onWindowMoved);
@@ -105,7 +119,7 @@ void Application::init()
     audioConverter->setLanguage(originalLang);
     textTranslator->setLanguage(originalLang, translationLang);
     audioCapturer->start(duration.toFloat() * 1000);
-    mainWindow->show();
+    
 }
 
 void Application::onAudioReady(const QByteArray& data)

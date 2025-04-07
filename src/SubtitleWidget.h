@@ -11,6 +11,7 @@ public:
     explicit SubtitleWidget(QWidget *parent = nullptr);
     ~SubtitleWidget() = default;
 
+    void setLangMap(const QMap<QString, QString> map);
     void setLanguage(const QString &src_lang, const QString &target_lang);
     void setDuration(const QString &duration);
 
@@ -45,6 +46,4 @@ private:
     class QPushButton *closeButton = nullptr;
     QPoint dragPosition;
     bool isDragging = false;
-
-    const QMap<QString, QString> langMap = {{"zh", "中"}, {"ja", "日"}, {"ko", "韩"}, {"en", "英"}};
 };
