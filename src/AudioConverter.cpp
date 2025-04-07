@@ -57,5 +57,5 @@ void AudioConverter::convert(const QByteArray &data)
     QByteArray ret = vosk_recognizer_final_result(recognizer);
     vosk_recognizer_free(recognizer);
     recognizer = nullptr;
-    emit completed(QJsonDocument::fromJson(ret).object().value("text").toString().trimmed().remove(QRegularExpression("\\s+")));
+    emit completed(QJsonDocument::fromJson(ret).object().value("text").toString().trimmed());
 }
