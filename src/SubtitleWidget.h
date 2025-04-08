@@ -2,6 +2,7 @@
 
 #include <QWidget>
 #include <QMap>
+#include <QQueue>
 
 class SubtitleWidget : public QWidget
 {
@@ -9,7 +10,7 @@ class SubtitleWidget : public QWidget
 
 public:
     explicit SubtitleWidget(QWidget *parent = nullptr);
-    ~SubtitleWidget() = default;
+    ~SubtitleWidget();
 
     void setLangMap(const QMap<QString, QString> map);
     void setLanguage(const QString &src_lang, const QString &target_lang);
@@ -34,6 +35,7 @@ public slots:
 private:
     void initUI();
 
+private:
     class QComboBox *originalLangCombo;
     class QComboBox *translatedLangCombo;
     class QComboBox *durationCombo;
@@ -46,4 +48,8 @@ private:
     class QPushButton *closeButton = nullptr;
     QPoint dragPosition;
     bool isDragging = false;
+
+    int duration = 0;
+    class QElapsedTimer* originalTimer = nullptr;
+    class QElapsedTimer* translatedTimer = nullptr;
 };
