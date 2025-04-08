@@ -20,7 +20,7 @@ void AudioConverter::setLanguage(const QString& lang)
 {
     LOG(info) << "设置语音识别的语言: " << lang;
     language = lang;
-    clear();
+    cleanUp();
     const auto model_path = QString("models/vosk-%1").arg(lang);
     if (QDir(model_path).exists()) {
         model = vosk_model_new(model_path.toUtf8().constData());
@@ -32,7 +32,7 @@ void AudioConverter::setLanguage(const QString& lang)
     }
 }
 
-void AudioConverter::clear()
+void AudioConverter::cleanUp()
 {
     thread->quit();
     thread->wait();
@@ -48,7 +48,7 @@ void AudioConverter::clear()
 
 AudioConverter::~AudioConverter()
 {
-    clear();
+    cleanUp();
 }
 
 void AudioConverter::convert(const QByteArray &data)

@@ -17,7 +17,7 @@ signals:
     void completed(const QString& result);
 
 private:
-    void clear();
+    void cleanUp();
 
 private:
     class QThread* thread = nullptr;

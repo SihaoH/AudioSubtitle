@@ -24,11 +24,6 @@ Application::~Application()
     delete textTranslator;
 }
 
-void Application::initLater()
-{
-    QTimer::singleShot(0, this, &Application::init);
-}
-
 void Application::loadConfig()
 {
     QFile config_file("config.json");
@@ -94,6 +89,11 @@ void Application::saveConfig()
     config_file.write(doc.toJson());
 }
 
+void Application::initLater()
+{
+    QTimer::singleShot(0, this, &Application::init);
+}
+
 void Application::init()
 {
     mainWindow = new SubtitleWidget();
@@ -113,7 +113,6 @@ void Application::init()
     audioConverter = new AudioConverter();
     textTranslator = new TextTranslator();
 
-    // 使用标志值，让转换和翻译只响应最新的（中间来不及处理的会丢失）
     connect(audioCapturer, &AudioCapturer::readReady, audioConverter, &AudioConverter::convert);
     connect(audioConverter, &AudioConverter::completed, mainWindow, &SubtitleWidget::setOriginalText);
     connect(audioConverter, &AudioConverter::completed, textTranslator, &TextTranslator::translate);

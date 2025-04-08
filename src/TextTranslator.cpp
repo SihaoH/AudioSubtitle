@@ -11,14 +11,14 @@ public:
     TextTranslatorPrivate() = default;
     ~TextTranslatorPrivate()
     {
-        clear();
+        cleanUp();
     }
     void setLanguage(const QString& src, const QString& dst)
     {
         const QString prefix = "models/";
         const QString sp_suffix = "/sentencepiece.model";
         const QString tr_suffix = "/model";
-        clear();
+        cleanUp();
     
         // 如果源语言和目标语言都不是英语,需要加载中间模型
         if (src != "en" && dst != "en") {
@@ -79,7 +79,7 @@ public:
             translator = new ctranslate2::Translator((model_dir + tr_suffix).toStdString(), ctranslate2::Device::CPU);
         }
     }
-    void clear()
+    void cleanUp()
     {
         if (tokenizer) {
             delete tokenizer;
