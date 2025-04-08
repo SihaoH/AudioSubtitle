@@ -18,15 +18,13 @@ AudioConverter::AudioConverter()
 
 void AudioConverter::setLanguage(const QString& lang)
 {
-    thread->quit();
-    thread->wait();
     LOG(info) << "设置语音识别的语言: " << lang;
+    language = lang;
+    clear();
     const auto model_path = QString("models/vosk-%1").arg(lang);
     if (QDir(model_path).exists()) {
-        if (model) {
-            vosk_model_free(model);
-        }
         model = vosk_model_new(model_path.toUtf8().constData());
+        recognizer = vosk_recognizer_new(model, sampleRate);
         LOG(info) << "语音模型加载成功: " << model_path;
         thread->start();
     } else {
@@ -34,14 +32,23 @@ void AudioConverter::setLanguage(const QString& lang)
     }
 }
 
-AudioConverter::~AudioConverter()
+void AudioConverter::clear()
 {
     thread->quit();
     thread->wait();
+    if (model) {
+        vosk_model_free(model);
+        model = nullptr;
+    }
     if (recognizer) {
         vosk_recognizer_free(recognizer);
+        recognizer = nullptr;
     }
-    vosk_model_free(model);
+}
+
+AudioConverter::~AudioConverter()
+{
+    clear();
 }
 
 void AudioConverter::convert(const QByteArray &data)
@@ -50,12 +57,12 @@ void AudioConverter::convert(const QByteArray &data)
         emit completed(QString());
         return;
     }
-    if (recognizer == nullptr) {
-        recognizer = vosk_recognizer_new(model, sampleRate);
-    }
+    vosk_recognizer_reset(recognizer);
     vosk_recognizer_accept_waveform(recognizer, data.data(), data.size());
     QByteArray ret = vosk_recognizer_final_result(recognizer);
-    vosk_recognizer_free(recognizer);
-    recognizer = nullptr;
-    emit completed(QJsonDocument::fromJson(ret).object().value("text").toString().trimmed());
+    auto ret_str = QJsonDocument::fromJson(ret).object().value("text").toString().trimmed();
+    if (language != "en") {
+        ret_str.remove(QRegularExpression("\\s+"));
+    }
+    emit completed(ret_str);
 }

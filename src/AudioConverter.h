@@ -17,8 +17,12 @@ signals:
     void completed(const QString& result);
 
 private:
+    void clear();
+
+private:
     class QThread* thread = nullptr;
     class VoskModel* model = nullptr;
     class VoskRecognizer* recognizer = nullptr;
-    float sampleRate = 16000.f;
+    QString language;
+    const float sampleRate = 16000.f;
 };
