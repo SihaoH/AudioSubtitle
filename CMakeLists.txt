@@ -8,7 +8,7 @@ find_program(VCPKG_ROOT vcpkg.exe PATHS $ENV{PATH})
 cmake_path(GET VCPKG_ROOT PARENT_PATH VCPKG_ROOT)
 set(CMAKE_TOOLCHAIN_FILE ${VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake)
 
-set(PROJ_NAME AudioSubtitle)
+set(PROJ_NAME LiveSubtitles)
 project(${PROJ_NAME} VERSION 0.1.0)
 
 # 启用解决方案文件夹

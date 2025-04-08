@@ -4,7 +4,8 @@ add_library(libvosk INTERFACE)
 target_include_directories(libvosk INTERFACE ${VOSK_ROOT})
 target_link_libraries(libvosk INTERFACE ${VOSK_ROOT}/libvosk.lib)
 
-add_custom_target(copy_vosk_dlls ALL
+add_custom_target(libvosk_dll ALL
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_OUTPUT_DIRECTORY_INTDIR}"
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
     "${VOSK_ROOT}/libgcc_s_seh-1.dll"
     "${VOSK_ROOT}/libstdc++-6.dll"
@@ -12,8 +13,8 @@ add_custom_target(copy_vosk_dlls ALL
     "${VOSK_ROOT}/libwinpthread-1.dll"
     "${CMAKE_OUTPUT_DIRECTORY_INTDIR}"
 )
-add_dependencies(copy_vosk_dlls libvosk)
-set_target_properties(copy_vosk_dlls PROPERTIES FOLDER vosk_dir)
+add_dependencies(libvosk libvosk_dll)
+set_target_properties(libvosk_dll PROPERTIES FOLDER vosk_dir)
 
 install(FILES
     "${VOSK_ROOT}/libgcc_s_seh-1.dll"
@@ -50,12 +51,12 @@ target_link_libraries(libsentencepiece INTERFACE
 
 # 添加ctranslate2库，来源https://github.com/OpenNMT/CTranslate2/tree/v4.5.0
 find_package(OpenBLAS REQUIRED)
-set(BUILD_CLI OFF)
-set(WITH_MKL OFF)
-set(WITH_OPENBLAS ON)
-set(CUDA_DYNAMIC_LOADING ON)
-set(OPENMP_RUNTIME "COMP")
-set(OPENBLAS_INCLUDE_DIR ${OpenBLAS_INCLUDE_DIRS})
+set(BUILD_CLI OFF CACHE STRING "Compile the clients")
+set(WITH_MKL OFF CACHE STRING "Compile with Intel MKL backend")
+set(WITH_OPENBLAS ON CACHE STRING "Compile with OpenBLAS backend")
+set(CUDA_DYNAMIC_LOADING ON CACHE STRING "Dynamically load CUDA libraries at runtime")
+set(OPENMP_RUNTIME "COMP" CACHE STRING "OpenMP runtime (INTEL, COMP, NONE)")
+set(OPENBLAS_INCLUDE_DIR ${OpenBLAS_INCLUDE_DIRS} CACHE STRING "OpenBLAS include directory")
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/CTranslate2)
 set_target_properties(cpu_features PROPERTIES FOLDER ctranslate2_dir)
 set_target_properties(utils PROPERTIES FOLDER ctranslate2_dir)
