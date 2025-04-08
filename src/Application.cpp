@@ -114,40 +114,14 @@ void Application::init()
     textTranslator = new TextTranslator();
 
     // 使用标志值，让转换和翻译只响应最新的（中间来不及处理的会丢失）
-    connect(audioCapturer, &AudioCapturer::readReady, this, &Application::onAudioReady);
-    connect(this, &Application::aboutToConvert, audioConverter, &AudioConverter::convert, Qt::QueuedConnection);
-    connect(audioConverter, &AudioConverter::completed, mainWindow, &SubtitleWidget::setOriginalText, Qt::QueuedConnection);
-    connect(audioConverter, &AudioConverter::completed, this, &Application::onConvertCompleted, Qt::QueuedConnection);
-    connect(this, &Application::aboutToTranslate, textTranslator, &TextTranslator::translate, Qt::QueuedConnection);
-    connect(textTranslator, &TextTranslator::completed, mainWindow, &SubtitleWidget::setTranslatedText, Qt::QueuedConnection);
-    connect(textTranslator, &TextTranslator::completed, this, &Application::onTranslateCompleted, Qt::QueuedConnection);
+    connect(audioCapturer, &AudioCapturer::readReady, audioConverter, &AudioConverter::convert);
+    connect(audioConverter, &AudioConverter::completed, mainWindow, &SubtitleWidget::setOriginalText);
+    connect(audioConverter, &AudioConverter::completed, textTranslator, &TextTranslator::translate);
+    connect(textTranslator, &TextTranslator::completed, mainWindow, &SubtitleWidget::setTranslatedText);
 
     audioConverter->setLanguage(originalLang);
     textTranslator->setLanguage(originalLang, translationLang);
     audioCapturer->start(duration.toFloat() * 1000);
-    
-}
-
-void Application::onAudioReady(const QByteArray& data)
-{
-    if (isConverting == false) {
-        isConverting = true;
-        emit aboutToConvert(data);
-    }
-}
-
-void Application::onConvertCompleted(const QString& text)
-{
-    isConverting = false;
-    if (isTranslating == false) {
-        isTranslating = true;
-        emit aboutToTranslate(text);
-    }
-}
-
-void Application::onTranslateCompleted()
-{
-    isTranslating = false;
 }
 
 void Application::onWindowMoved(const QPoint& pos)

@@ -13,14 +13,7 @@ public:
 
     void initLater();
 
-signals:
-    void aboutToConvert(const QByteArray& data);
-    void aboutToTranslate(const QString& text);
-
 public slots:
-    void onAudioReady(const QByteArray& data);
-    void onConvertCompleted(const QString& text);
-    void onTranslateCompleted();
     void onWindowMoved(const QPoint& pos);
     void onOriginalLangChanged(const QString& text);
     void onTranslatedLangChanged(const QString& text);
@@ -45,6 +38,4 @@ private:
     class AudioCapturer* audioCapturer = nullptr;
     class AudioConverter* audioConverter = nullptr;
     class TextTranslator* textTranslator = nullptr;
-    bool isConverting = false;
-    bool isTranslating = false;
 }; 
