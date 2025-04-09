@@ -13,7 +13,7 @@
 Application::Application(int argc, char **argv)
     : QApplication(argc, argv)
 {
-    Logger::instance()->init("audio_subtitle.log");
+    Logger::instance()->init("audio_subtitle");
     loadConfig();
 }
 
