@@ -57,8 +57,13 @@ add_custom_command(
 
 install(TARGETS ${TARGET} RUNTIME DESTINATION .)
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/config.json DESTINATION .)
+
+# 安装Qt插件dll
+get_filename_component(QT6_ROOT "${Qt6_DIR}/../../.." ABSOLUTE)
+install(FILES ${QT6_ROOT}/plugins/platforms/qwindows.dll DESTINATION ./plugins/platforms)
+
 # 安装所依赖的dll（需要在vcvarsall.bat打开的环境下使用）
-set(APP "\$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/${TARGET}.exe")
+set(APP "\$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/${PROJECT_NAME}.exe")
 set(DIRS "${CMAKE_OUTPUT_INSTALL_INTDIR}")
 install(CODE "
     include(BundleUtilities)
