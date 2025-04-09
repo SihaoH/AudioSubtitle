@@ -9,7 +9,10 @@
 
 LogStream::LogStream(int t, const char* file, int line)
 {
-    wholeStr = QString("[%1::%2] ").arg(file).arg(line);
+    QString file_str = file;
+    file_str.replace("\\", "/");
+    file_str.remove(PROJECT_SOURCE_DIR);
+    wholeStr = QString("[%1::%2] ").arg(file_str).arg(line);
     type = t;
 }
 

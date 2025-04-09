@@ -39,6 +39,7 @@ target_link_libraries(${TARGET}
 
 add_definitions(-D_SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING)
 add_definitions(-DALERT_ERROR_LOG)
+add_definitions(-DPROJECT_SOURCE_DIR="${PROJECT_SOURCE_DIR}/")
 
 # 修改从VS调试时的工作目录路径
 set_target_properties(${TARGET} PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY ${CMAKE_OUTPUT_DIRECTORY_INTDIR})
