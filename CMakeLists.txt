@@ -8,8 +8,12 @@ find_program(VCPKG_ROOT vcpkg.exe PATHS $ENV{PATH})
 cmake_path(GET VCPKG_ROOT PARENT_PATH VCPKG_ROOT)
 set(CMAKE_TOOLCHAIN_FILE ${VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake)
 
-set(PROJ_NAME LiveSubtitles)
-project(${PROJ_NAME} VERSION 0.1.0)
+# 策略设置要在project之前，否则会被vcpkg的一些操作重置
+cmake_policy(SET CMP0077 NEW)
+cmake_policy(SET CMP0146 OLD)
+cmake_policy(SET CMP0147 OLD)
+
+project(LiveSubtitles VERSION 0.1.0)
 
 # 启用解决方案文件夹
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)

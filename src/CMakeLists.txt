@@ -23,6 +23,8 @@ add_executable(${TARGET} ${SOURCES})
 # 设置库的依赖
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets EntryPointPrivate)
 find_package(spdlog CONFIG REQUIRED)
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_ROOT}/Modules")
+find_package(CUDAToolkit REQUIRED)
 
 target_link_libraries(${TARGET}
     PUBLIC
@@ -35,6 +37,7 @@ target_link_libraries(${TARGET}
     libvosk
     libsentencepiece
     ctranslate2
+    CUDA::cudart
 )
 
 add_definitions(-D_SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING)

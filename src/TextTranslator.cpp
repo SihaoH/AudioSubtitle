@@ -4,6 +4,7 @@
 #include <QDir>
 #include <sentencepiece_processor.h>
 #include <ctranslate2/translator.h>
+#include <cuda_runtime.h>
 
 class TextTranslatorPrivate
 {
@@ -15,6 +16,12 @@ public:
     }
     void setLanguage(const QString& src, const QString& dst)
     {
+        auto useDevice = ctranslate2::Device::CPU;
+        int cuda_count = 0;
+        cudaGetDeviceCount(&cuda_count);
+        if (cuda_count > 0) {
+            useDevice = ctranslate2::Device::CUDA;
+        }
         const QString prefix = "models/";
         const QString sp_suffix = "/sentencepiece.model";
         const QString tr_suffix = "/model";
@@ -47,7 +54,7 @@ public:
                 return;
             }
 
-            translator = new ctranslate2::Translator((src_en_dir + tr_suffix).toStdString(), ctranslate2::Device::CPU);
+            translator = new ctranslate2::Translator((src_en_dir + tr_suffix).toStdString(), useDevice);
                 
             // 加载第二个模型(en->dst)
             tokenizer2 = new sentencepiece::SentencePieceProcessor();
@@ -59,7 +66,7 @@ public:
                 return;
             }
 
-            translator2 = new ctranslate2::Translator((en_dst_dir + tr_suffix).toStdString(), ctranslate2::Device::CPU);
+            translator2 = new ctranslate2::Translator((en_dst_dir + tr_suffix).toStdString(), useDevice);
         } else {
             // 直接加载src->dst的模型
             QString model_dir = QString("%1translate-%2_%3").arg(prefix).arg(src).arg(dst);
@@ -76,7 +83,7 @@ public:
                 return;
             }
 
-            translator = new ctranslate2::Translator((model_dir + tr_suffix).toStdString(), ctranslate2::Device::CPU);
+            translator = new ctranslate2::Translator((model_dir + tr_suffix).toStdString(), useDevice);
         }
     }
     void cleanUp()
@@ -142,7 +149,7 @@ void TextTranslator::translate(const QString& text)
     std::vector<std::vector<std::string>> batch = {{""}};
     d->tokenizer->Encode(text.toUtf8().constData(), &batch[0]);
     ctranslate2::TranslationOptions options;
-    options.beam_size = 1;
+    options.beam_size = 2;
     options.length_penalty = 0.2f;
     options.replace_unknowns = true;
     auto ret_batch = d->translator->translate_batch(batch, options);

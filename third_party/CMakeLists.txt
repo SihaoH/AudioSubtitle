@@ -51,10 +51,12 @@ target_link_libraries(libsentencepiece INTERFACE
 
 # 添加ctranslate2库，来源https://github.com/OpenNMT/CTranslate2/tree/v4.5.0
 find_package(OpenBLAS REQUIRED)
-set(BUILD_CLI OFF CACHE STRING "Compile the clients")
-set(WITH_MKL OFF CACHE STRING "Compile with Intel MKL backend")
-set(WITH_OPENBLAS ON CACHE STRING "Compile with OpenBLAS backend")
-set(CUDA_DYNAMIC_LOADING ON CACHE STRING "Dynamically load CUDA libraries at runtime")
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_ROOT}/Modules")
+set(BUILD_CLI OFF)
+set(WITH_MKL OFF)
+set(WITH_OPENBLAS ON)
+set(WITH_CUDA ON)
+set(CUDA_DYNAMIC_LOADING ON)
 set(OPENMP_RUNTIME "COMP" CACHE STRING "OpenMP runtime (INTEL, COMP, NONE)")
 set(OPENBLAS_INCLUDE_DIR ${OpenBLAS_INCLUDE_DIRS} CACHE STRING "OpenBLAS include directory")
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/CTranslate2 EXCLUDE_FROM_ALL)
